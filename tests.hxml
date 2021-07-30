@@ -1,0 +1,4 @@
+-cp src
+-D helder.unit.package=tests
+-lib deep_equal
+-main helder.Unit

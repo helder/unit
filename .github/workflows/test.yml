@@ -1,0 +1,26 @@
+name: Test
+
+on:
+  push:
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '14'
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+      # - uses: pxshadow/setup-hashlink@v1.0.1
+      - uses: actions/setup-python@v2
+      - run: yarn
+      - run: yarn test
+      - run: yarn test:node
+      - run: yarn test:php
+      # - run: yarn test:hl
+      - run: yarn test:python
