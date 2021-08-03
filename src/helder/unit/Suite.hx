@@ -8,8 +8,12 @@ import helder.unit.Assert.Assertion;
 
 abstract Setup<T>(Null<Either<() -> T, (done: (result: T) -> Void) -> Void>>) {
   public function new(either) this = either;
-  @:from public static function fromSync<T>(sync: () -> T) return new Setup<T>(Left(sync));
-  @:from public static function fromAsync<T>(async: (done: (result: T) -> Void) -> Void) return new Setup<T>(Right(async));
+  @:from public static function fromSync<T>(sync: () -> T) 
+    return new Setup<T>(Left(sync));
+  @:from public static function fromVoidAsync<T>(async: (done: () -> Void) -> Void)
+    return new Setup<T>(Right(done -> async(() -> @:nullSafety(Off) done(null))));
+  @:from public static function fromAsync<T>(async: (done: (result: T) -> Void) -> Void) 
+    return new Setup<T>(Right(async));
   public function get(done: (result: T) -> Void)
     return switch this {
       case null: @:nullSafety(Off) done(null);
@@ -20,9 +24,14 @@ abstract Setup<T>(Null<Either<() -> T, (done: (result: T) -> Void) -> Void>>) {
 
 abstract Before<P1, T>(Null<Either<(p1: P1) -> T, (p1: P1, done: (result: T) -> Void) -> Void>>) {
   public function new(either) this = either;
-  @:from public static function fromVoidSync<P1, T>(sync: () -> T) return new Before<P1, T>(Left(p1 -> sync()));
-  @:from public static function fromSync<P1, T>(sync: (p1: P1) -> T) return new Before<P1, T>(Left(sync));
-  @:from public static function fromAsync<P1, T>(async: (p1: P1, done: (result: T) -> Void) -> Void) return new Before<P1, T>(Right(async));
+  @:from public static function fromVoidSync<P1, T>(sync: () -> T)
+    return new Before<P1, T>(Left(p1 -> sync()));
+  @:from public static function fromSync<P1, T>(sync: (p1: P1) -> T) 
+    return new Before<P1, T>(Left(sync));
+  @:from public static function fromVoidAsync<P1, T>(async: (p1: P1, done: () -> Void) -> Void)
+    return new Before<P1, T>(Right((p1, done) -> async(p1, () -> @:nullSafety(Off) done(null))));
+  @:from public static function fromAsync<P1, T>(async: (p1: P1, done: (result: T) -> Void) -> Void) 
+    return new Before<P1, T>(Right(async));
   public function get(p1: P1, done: (result: T) -> Void)
     return switch this {
       case null: @:nullSafety(Off) done(null);
@@ -33,10 +42,14 @@ abstract Before<P1, T>(Null<Either<(p1: P1) -> T, (p1: P1, done: (result: T) -> 
 
 abstract After<P1>(Null<Either<(p1: P1) -> Void, (p1: P1, done: () -> Void) -> Void>>) {
   public function new(either) this = either;
-  @:from public static function fromVoidSync<P1>(sync: () -> Void) return new After<P1>(Left(p1 -> sync()));
-  @:from public static function fromSkipAsync<P1>(async: (done: () -> Void) -> Void) return new After<P1>(Right((p1, done) -> async(done)));
-  @:from public static function fromSync<P1>(sync: (p1: P1) -> Void) return new After<P1>(Left(sync));
-  @:from public static function fromAsync<P1>(async: (p1: P1, done: () -> Void) -> Void) return new After<P1>(Right(async));
+  @:from public static function fromVoidSync<P1>(sync: () -> Void) 
+    return new After<P1>(Left(p1 -> sync()));
+  @:from public static function fromSkipAsync<P1>(async: (done: () -> Void) -> Void) 
+    return new After<P1>(Right((p1, done) -> async(done)));
+  @:from public static function fromSync<P1>(sync: (p1: P1) -> Void) 
+    return new After<P1>(Left(sync));
+  @:from public static function fromAsync<P1>(async: (p1: P1, done: () -> Void) -> Void) 
+    return new After<P1>(Right(async));
   public function get(p1: P1, done: () -> Void)
     return switch this {
       case null: done();
