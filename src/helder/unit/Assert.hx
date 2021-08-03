@@ -22,9 +22,9 @@ class Assertion extends Exception {
   public static function reset()
     last = null;
 
-  static public function create<T>(check: Bool, actual: T, expected: T, op: String, message: String, pos: PosInfos) {
+  static public function create<T>(check: Bool, actual: T, expected: T, op: String, message: String, ?pos: PosInfos) {
     if (check) return;
-    throw new Assertion(message, actual, expected, op, pos);
+    throw @:nullSafety(Off) new Assertion(message, actual, expected, op, pos);
   }  
 }
 

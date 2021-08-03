@@ -9,7 +9,8 @@ import sys.FileSystem;
 
 // from tink_macro
 private function drill(parts:Array<String>, pos:Position) {
-  var target = {expr: EConst(CIdent(parts.shift())), pos: pos}
+  if (parts.length == 0) throw 'Cannot drill empty path';
+  @:nullSafety(Off) var target = {expr: EConst(CIdent(parts.shift())), pos: pos}
   for (part in parts)
     target = {expr: EField(target, part), pos: pos}
   return target;

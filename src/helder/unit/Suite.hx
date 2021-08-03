@@ -6,32 +6,32 @@ import haxe.Exception;
 import haxe.ds.Either;
 import helder.unit.Assert.Assertion;
 
-abstract Setup<T>(Either<() -> T, (done: (result: T) -> Void) -> Void>) {
+abstract Setup<T>(Null<Either<() -> T, (done: (result: T) -> Void) -> Void>>) {
   public function new(either) this = either;
   @:from public static function fromSync<T>(sync: () -> T) return new Setup<T>(Left(sync));
   @:from public static function fromAsync<T>(async: (done: (result: T) -> Void) -> Void) return new Setup<T>(Right(async));
   public function get(done: (result: T) -> Void)
     return switch this {
-      case null: done(null);
+      case null: @:nullSafety(Off) done(null);
       case Left(sync): done(sync());
       case Right(async): async(done);
     }
 }
 
-abstract Before<P1, T>(Either<(p1: P1) -> T, (p1: P1, done: (result: T) -> Void) -> Void>) {
+abstract Before<P1, T>(Null<Either<(p1: P1) -> T, (p1: P1, done: (result: T) -> Void) -> Void>>) {
   public function new(either) this = either;
   @:from public static function fromVoidSync<P1, T>(sync: () -> T) return new Before<P1, T>(Left(p1 -> sync()));
   @:from public static function fromSync<P1, T>(sync: (p1: P1) -> T) return new Before<P1, T>(Left(sync));
   @:from public static function fromAsync<P1, T>(async: (p1: P1, done: (result: T) -> Void) -> Void) return new Before<P1, T>(Right(async));
   public function get(p1: P1, done: (result: T) -> Void)
     return switch this {
-      case null: done(null);
+      case null: @:nullSafety(Off) done(null);
       case Left(sync): done(sync(p1));
       case Right(async): async(p1, done);
     }
 }
 
-abstract After<P1>(Either<(p1: P1) -> Void, (p1: P1, done: () -> Void) -> Void>) {
+abstract After<P1>(Null<Either<(p1: P1) -> Void, (p1: P1, done: () -> Void) -> Void>>) {
   public function new(either) this = either;
   @:from public static function fromVoidSync<P1>(sync: () -> Void) return new After<P1>(Left(p1 -> sync()));
   @:from public static function fromSkipAsync<P1>(async: (done: () -> Void) -> Void) return new After<P1>(Right((p1, done) -> async(done)));
@@ -86,7 +86,10 @@ class Suite<S, T> {
   var skips = 0; 
 
   public function new(?options: SuiteOptions<S, T>) {
-    this.options = options == null ? {} : Reflect.copy(options);
+    this.options = switch options{
+      case null: {}
+      case v: cast Reflect.copy(v);
+    }
   }
   public function setName(name: String) {
     options.name = name;
@@ -118,8 +121,7 @@ class Suite<S, T> {
       message += ansi.gray(
         gutter +
         stack.split('\n').map(line -> {
-          var columns = Sys.getEnv('COLUMNS');
-          var max = columns != null ? Std.parseInt(columns) : 120;
+          var max = 120;
           if (line.length < max) return line;
           var res = [];
           while (line.length > 0) {
@@ -218,12 +220,12 @@ class Suite<S, T> {
       write((success ? ansi.green : ansi.red)('\n  Passed:    ' +  res.passed));
       write('\n  Skipped:   ' + (res.skips > 0 ? ansi.yellow('${res.skips}') : '0'));
       write('\n  Duration:  ' + formatDuration(res.duration) + '\n');
-      if (done != null) done(res);
+      if (done != null) @:nullSafety(Off) done(res);
     }
     function next() {
       if (suites.length == 0) return finish(endRes);
       final suite = suites.shift();
-      suite.run(res -> {
+      @:nullSafety(Off) suite.run(res -> {
         endRes = {
           total: endRes.total + res.total,
           passed: endRes.passed + res.passed,
