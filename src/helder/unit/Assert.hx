@@ -1,10 +1,9 @@
 package helder.unit;
 
 import haxe.PosInfos;
-import haxe.display.Position;
 import deepequal.DeepEqual;
-
 import haxe.Exception;
+import helder.unit.Assert.Assertion.create;
 
 class Assertion extends Exception {
   public final actual: Any;
@@ -22,87 +21,83 @@ class Assertion extends Exception {
   }
   public static function reset()
     last = null;
+
+  static public function create<T>(check: Bool, actual: T, expected: T, op: String, message: String, pos: PosInfos) {
+    if (check) return;
+    throw new Assertion(message, actual, expected, op, pos);
+  }  
 }
 
-private function doAssert<T>(check: Bool, actual: T, expected: T, op: String, message: String, pos: PosInfos) {
-  if (check) return;
-  throw new Assertion(message, actual, expected, op, pos);
-}
+class AssertNotTools {
+  public function new() {}
+    
+  public function ok(check: Bool, ?pos: PosInfos) {
+    create(!check, false, true, 'not', 'Expected value to be falsey', pos);
+  }
 
-function ok(check: Bool, ?pos: PosInfos) {
-  doAssert(check, false, true, 'ok', 'Expected value to be truthy', pos);
-}
+  public function is<T>(a: T, b: T, ?pos: PosInfos) {
+    create(a != b, a, b, 'is', 'Expected values not be equal', pos);
+  }
 
-function is<T>(a: T, b: T, ?pos: PosInfos) {
-  doAssert(a == b, a, b, 'is', 'Expected values to be equal', pos);
-}
+  public function equal<T>(a: T, b: T, ?pos: PosInfos) {
+    switch DeepEqual.compare(a, b) {
+      case Success(_):
+        create(false, a, b, 'equal', 'Expected values not to be deeply equal', pos);
+      case Failure(error):
+    }
+  }
 
-function equal<T>(a: T, b: T, ?pos: PosInfos) {
-  switch DeepEqual.compare(a, b) {
-    case Success(_):
-    case Failure(error):
-      doAssert(false, a, b, 'equal', error.message, pos);
+  public function instance(value: Any, type: Class<Dynamic>, ?pos: PosInfos) {
+    create(!Std.isOfType(value, type), value, type, 'type', 'Expected value not to be an instance of ${type}', pos);
+  }
+
+  public function throws(run: () -> Void, expected: (e: Exception) -> Bool, ?pos: PosInfos) {
+    try {
+      run();
+    } catch (e) {
+      create(!expected(e), false, true, 'throws', 'Expected function not to throw matching exception', pos);
+    }
   }
 }
 
-function unreachable(?pos: PosInfos) {
-	doAssert(false, true, false, 'unreachable', 'Expected not to be reached!', pos);
-}
+class AssertTools {
+  public function new() {}
 
-function instance(value: Any, type: Class<Dynamic>, ?pos: PosInfos) {
-	doAssert(Std.isOfType(value, type), value, type, 'type', 'Expected value to be an instance of ${type}', pos);
-}
+  public final not = new AssertNotTools();
 
-function throws(run: () -> Void, expected: (e: Exception) -> Bool, ?pos: PosInfos) {
-  try {
-    run();
-		doAssert(false, false, true, 'throws', 'Expected function to throw', pos);
-  } catch (e) {
-		if (e is Assertion) throw e;
-		doAssert(expected(e), false, true, 'throws', 'Expected function to throw matching exception', pos);
+  public function ok(check: Bool, ?pos: PosInfos) {
+    create(check, false, true, 'ok', 'Expected value to be truthy', pos);
+  }
+  
+  public function is<T>(a: T, b: T, ?pos: PosInfos) {
+    create(a == b, a, b, 'is', 'Expected values to be equal', pos);
+  }
+  
+  public function equal<T>(a: T, b: T, ?pos: PosInfos) {
+    switch DeepEqual.compare(a, b) {
+      case Success(_):
+      case Failure(error):
+        create(false, a, b, 'equal', error.message, pos);
+    }
+  }
+  
+  public function unreachable(?pos: PosInfos) {
+    create(false, true, false, 'unreachable', 'Expected not to be reached!', pos);
+  }
+  
+  public function instance(value: Any, type: Class<Dynamic>, ?pos: PosInfos) {
+    create(Std.isOfType(value, type), value, type, 'type', 'Expected value to be an instance of ${type}', pos);
+  }
+  
+  public function throws(run: () -> Void, expected: (e: Exception) -> Bool, ?pos: PosInfos) {
+    try {
+      run();
+      create(false, false, true, 'throws', 'Expected function to throw', pos);
+    } catch (e) {
+      if (e is Assertion) throw e;
+      create(expected(e), false, true, 'throws', 'Expected function to throw matching exception', pos);
+    }
   }
 }
 
-function notOk(check: Bool, ?pos: PosInfos) {
-  doAssert(!check, false, true, 'not', 'Expected value to be falsey', pos);
-}
-
-function notIs<T>(a: T, b: T, ?pos: PosInfos) {
-  doAssert(a != b, a, b, 'is', 'Expected values not be equal', pos);
-}
-
-function notEqual<T>(a: T, b: T, ?pos: PosInfos) {
-  switch DeepEqual.compare(a, b) {
-    case Success(_):
-      doAssert(false, a, b, 'equal', 'Expected values not to be deeply equal', pos);
-    case Failure(error):
-  }
-}
-
-function notInstance(value: Any, type: Class<Dynamic>, ?pos: PosInfos) {
-	doAssert(!Std.isOfType(value, type), value, type, 'type', 'Expected value not to be an instance of ${type}', pos);
-}
-
-function notThrows(run: () -> Void, expected: (e: Exception) -> Bool, ?pos: PosInfos) {
-  try {
-    run();
-  } catch (e) {
-		doAssert(!expected(e), false, true, 'throws', 'Expected function not to throw matching exception', pos);
-  }
-}
-
-final assert = {
-  ok: ok,
-  is: is,
-  equal: equal,
-  unreachable: unreachable,
-  instance: instance,
-  throws: throws,
-  not: {
-    ok: notOk,
-    is: notIs,
-    equal: notEqual,
-    instance: notInstance,
-    throws: notThrows
-  }
-}
+final assert = new AssertTools();
