@@ -89,13 +89,13 @@ class AssertTools {
     create(Std.isOfType(value, type), value, type, 'type', 'Expected value to be an instance of ${type}', pos);
   }
   
-  public function throws(run: () -> Void, expected: (e: Exception) -> Bool, ?pos: PosInfos) {
+  public function throws(run: () -> Void, ?expected: (e: Exception) -> Bool, ?pos: PosInfos) {
     try {
       run();
       create(false, false, true, 'throws', 'Expected function to throw', pos);
     } catch (e) {
       if (e is Assertion) throw e;
-      create(expected(e), false, true, 'throws', 'Expected function to throw matching exception', pos);
+      create(if (expected == null) true else expected(e), false, true, 'throws', 'Expected function to throw matching exception', pos);
     }
   }
 }
