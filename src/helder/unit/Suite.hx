@@ -117,11 +117,11 @@ class Suite<S, T> {
     return this;
   }
   function formatFail(name: String, e: Exception) {
-    final stack = e.stack.toString();
+    final stack = try e.stack.toString() catch(_) '';
     final quote = ansi.dim('"');
     var message = '\n  ' + ansi.bold(ansi.bgRed(' FAIL '));
     message += ' $quote${ansi.red(ansi.bold(name))}$quote';
-    message += '\n    ' + e.message;
+    message += '\n    ' + try e.message catch(_) Std.string(e);
     if (e is Assertion) {
       final assertion: Assertion = cast e;
       message += ansi.dim(ansi.italic(' (${assertion.op})'));

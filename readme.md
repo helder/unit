@@ -1,12 +1,10 @@
 # helder.unit
 
-Simple, (mostly) macro-free test runner
+Simple, (mostly) macro-free test runner, inspired by [uvu](https://github.com/lukeed/uvu)
 
 ## Usage
 
-```
-lix +lib helder.unit
-```
+<pre><a href="https://github.com/lix-pm/lix.client">lix</a> +lib helder.unit</pre>
 
 Create test suites:
 
