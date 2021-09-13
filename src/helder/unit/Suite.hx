@@ -5,6 +5,7 @@ import helder.unit.util.Ansi.ansi;
 import haxe.Exception;
 import haxe.ds.Either;
 import helder.unit.Assert.Assertion;
+using StringTools;
 
 abstract Setup<T>(Null<Either<() -> T, (done: (result: T) -> Void) -> Void>>) {
   public function new(either) this = either;
@@ -216,7 +217,17 @@ class Suite<S, T> {
       done();
     });
     #elseif eval
-    eval.luv.UVError.setOnUnhandledException(cb);
+    eval.luv.UVError.setOnUnhandledException((e) -> {
+      final exitMsg = 'EvalExceptions.Sys_exit(';
+      if (e.message.startsWith(exitMsg)) {
+        final code = Std.parseInt(e.message.substr(
+          exitMsg.length, 
+          exitMsg.length - exitMsg.indexOf(')')  
+        ));
+        if (code != null) Sys.exit(code);
+      }
+      cb(e);
+    });
     main();
     #else
     main();

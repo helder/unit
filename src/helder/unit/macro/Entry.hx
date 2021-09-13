@@ -16,7 +16,7 @@ private function drill(parts:Array<String>, pos:Position) {
   return target;
 }
 
-macro function entry() {
+macro function entry(done: Expr) {
   final paths = Context.getClassPath();
   final pack = Context.definedValue('helder.unit.package');
   final modules = [];
@@ -68,5 +68,5 @@ macro function entry() {
       }
     }
   }
-  return macro helder.unit.Suite.runMultiple($a{code}, null);
+  return macro helder.unit.Suite.runMultiple($a{code}, $done);
 }

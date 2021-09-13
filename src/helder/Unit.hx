@@ -17,4 +17,9 @@ overload extern inline function suite<S, T>(options: SuiteOptions<S, T>) {
 final assert = helder.unit.Assert.assert;
 
 function main()
-  helder.unit.macro.Entry.entry();
+  helder.unit.macro.Entry.entry((res) -> {
+    #if !watch
+    final status = if (res.total == res.passed + res.skips) 0 else 1;
+    Sys.exit(status);
+    #end
+  });
