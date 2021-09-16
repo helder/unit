@@ -51,11 +51,11 @@ class AssertNotTools {
     create(!Std.isOfType(value, type), value, type, 'type', 'Expected value not to be an instance of ${type}', pos);
   }
 
-  public function throws(run: () -> Void, expected: (e: Exception) -> Bool, ?pos: PosInfos) {
+  public function throws(run: () -> Void, ?expected: (e: Exception) -> Bool, ?pos: PosInfos) {
     try {
       run();
     } catch (e) {
-      create(!expected(e), false, true, 'throws', 'Expected function not to throw matching exception', pos);
+      create(if (expected == null) false else !expected(e), false, true, 'throws', 'Expected function not to throw matching exception', pos);
     }
   }
 }
