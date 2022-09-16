@@ -241,7 +241,9 @@ class Suite<S, T> {
     function finish(res: RunResult) {
       final success = res.total == res.skips + res.passed;
       write('  Total:     ' + res.total);
-      write((success ? ansi.green : ansi.red)('\n  Passed:    ' +  res.passed));
+      final passed = '\n  Passed:    ' +  res.passed;
+      if (success) write(ansi.green(passed));
+      else write(ansi.red(passed));
       write('\n  Skipped:   ' + (res.skips > 0 ? ansi.yellow('${res.skips}') : '0'));
       write('\n  Duration:  ' + formatDuration(res.duration) + '\n');
       if (done != null) @:nullSafety(Off) done(res);
